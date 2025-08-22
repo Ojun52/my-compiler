@@ -13,3 +13,10 @@ impl CosntInt {
         self.0
     }
 }
+
+#[test]
+fn constint_test() {
+    let expect = 55;
+    let const_int = ConstInt::new(expect);
+    assert_eq!(const_int.get(), expect);
+}
