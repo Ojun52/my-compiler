@@ -1,3 +1,8 @@
+/// 式を表す。
+pub enum Expr {
+    ConstInt(ConstInt),
+}
+
 // タプルで定義されている。
 /// 32bit整数定数
 pub struct ConstInt(i32);
@@ -20,3 +25,6 @@ fn constint_test() {
     let const_int = ConstInt::new(expect);
     assert_eq!(const_int.get(), expect);
 }
+
+/// 加法を表す。
+pub struct PlusOp {}
