@@ -7,7 +7,7 @@ pub enum Expr {
 
 impl Expr {
     /// 式に対応するアセンブリを生成する。
-    pub fn generate(&self) -> i32 {
+    pub fn generate(&self) {
         match self {
             Expr::ConstInt(e) => e.generate(),
             Expr::BinaryOp(e) => e.generate(),
