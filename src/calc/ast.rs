@@ -1,7 +1,7 @@
 /// 式を表す。
 pub enum Expr {
     ConstInt(ConstInt),
-    PlusOp(Box<PlusOp>),
+    PlusOp(Box<BinaryOp>),
 }
 
 impl Expr {
@@ -9,7 +9,7 @@ impl Expr {
     pub fn eval(&self) -> i32 {
         match self {
             Expr::ConstInt(e) => e.eval(),
-            Expr::PlusOp(e) => e.eval(),
+            Expr::BinaryOp(e) => e.eval(),
         }
     }
 }
@@ -30,41 +30,60 @@ impl CosntInt {
     }
 }
 
-/// 加法を表す。
-pub struct PlusOp {
+pub enum OpKind {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+/// 基本的な2項演算。
+pub struct BinaryOp {
+    op_kind: OpKind,
     left_expr: Expr,
     right_expr: Expr,
 }
 
-impl PlusOp {
-    pub fn new(left_expr: Expr, right_expr: Expr) -> PlusOp {
-        PlusOp {
+impl BinaryOp {
+    pub fn new(op_kind: OpKind, left_expr: Expr, right_expr: Expr) -> BinaryOp {
+        BinaryOp {
+            op_kind,
             left_expr,
             right_expr,
         }
     }
 
-    /// 加法の評価。
-    pub fn eval(&self) -> i32 {
-        self.left_expr.eval() + self.right_expr.eval()
+    /// 2項演算の評価。
+    pub fn eval(&self) {
+        let lhs = self.left_expr.eval();
+        let rhs = self.right_expr.eval();
+
+        match self.op_kind {
+            OpKind::Add => left + right,
+            OpKind::Sub => left - right,
+            OpKind::Mul => left * right,
+            OpKind::Div => left / right,
+        }
     }
 }
 
 #[cfg[test]]
 mod tests {
     #[test]
-    fn plus_op_test() {
-        /// 1+(2+3)
-        let plus_op = PlusOp::new(
-            Expr::ConstInt(1),
-            Expr::PlusOp::new(Box::new(PlusOp::new(
+    fn binary_op_test() {
+        /// 5*(2+3)
+        let binary_op = BinaryOp::new(
+            OpKind::Mul,
+            Expr::ConstInt(ConstInt::new(5)),
+            Expr::BinaryOp(Box::new(BinaryOp::new(
+                OpKind::Add,
                 Expr::ConstInt::new(2),
                 Expr::ConstInt::new(3),
             ))),
         );
 
-        let expect = 1 + (2 + 3);
-        assert_eq!(plus_op.eval(), expect);
+        let expect = 5 + (2 + 3);
+        assert_eq!(binary_op.eval(), expect);
     }
 
     #[test]
