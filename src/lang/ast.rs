@@ -1,4 +1,5 @@
 /// 式を表す。
+#[derive(Debug, PartialEq)]
 pub enum Expr {
     ConstInt(ConstInt),
     BinaryOp(Box<BinaryOp>),
@@ -16,9 +17,10 @@ impl Expr {
 
 // タプルで定義されている。
 /// 32bit整数定数
+#[derive(Debug, PartialEq)]
 pub struct ConstInt(i32);
 
-impl CosntInt {
+impl ConstInt {
     /// ConstIntを生成。
     pub fn new(value: i32) -> ConstInt {
         ConstInt(value)
@@ -30,6 +32,7 @@ impl CosntInt {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum OpKind {
     Add,
     Sub,
@@ -38,6 +41,7 @@ pub enum OpKind {
 }
 
 /// 基本的な2項演算。
+#[derive(Debug, PartialEq)]
 pub struct BinaryOp {
     op_kind: OpKind,
     left_expr: Expr,
@@ -55,8 +59,8 @@ impl BinaryOp {
 
     /// 2項演算の評価。
     pub fn generate(&self) {
-        let lhs = self.left_expr.generate();
-        let rhs = self.right_expr.generate();
+        self.left_expr.generate();
+        self.right_expr.generate();
 
         println!("  pop rdi");
         println!("  pop rax");
