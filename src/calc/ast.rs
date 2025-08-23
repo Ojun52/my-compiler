@@ -5,11 +5,11 @@ pub enum Expr {
 }
 
 impl Expr {
-    /// 式を評価する。
-    pub fn eval(&self) -> i32 {
+    /// 式に対応するアセンブリを生成する。
+    pub fn generate(&self) -> i32 {
         match self {
-            Expr::ConstInt(e) => e.eval(),
-            Expr::BinaryOp(e) => e.eval(),
+            Expr::ConstInt(e) => e.generate(),
+            Expr::BinaryOp(e) => e.generate(),
         }
     }
 }
@@ -21,12 +21,12 @@ pub struct ConstInt(i32);
 impl CosntInt {
     /// ConstIntを生成。
     pub fn new(value: i32) -> ConstInt {
-        ConstInt(value);
+        ConstInt(value)
     }
 
     /// 評価関数。
-    pub fn eval(&self) -> i32 {
-        self.0
+    pub fn generate(&self) {
+        println!("  push {}", self.0);
     }
 }
 
@@ -54,42 +54,23 @@ impl BinaryOp {
     }
 
     /// 2項演算の評価。
-    pub fn eval(&self) {
-        let lhs = self.left_expr.eval();
-        let rhs = self.right_expr.eval();
+    pub fn generate(&self) {
+        let lhs = self.left_expr.generate();
+        let rhs = self.right_expr.generate();
+
+        println!("  pop rdi");
+        println!("  pop rax");
 
         match self.op_kind {
-            OpKind::Add => left + right,
-            OpKind::Sub => left - right,
-            OpKind::Mul => left * right,
-            OpKind::Div => left / right,
+            OpKind::Add => println!("  add rax, rdi"),
+            OpKind::Sub => println!("  sub rax, rdi"),
+            OpKind::Mul => println!("  mul rax, rdi"),
+            OpKind::Div => {
+                println!("  cqo");
+                println!("  idiv rdi")
+            }
         }
-    }
-}
 
-#[cfg[test]]
-mod tests {
-    #[test]
-    fn binary_op_test() {
-        /// 5*(2+3)
-        let binary_op = BinaryOp::new(
-            OpKind::Mul,
-            Expr::ConstInt(ConstInt::new(5)),
-            Expr::BinaryOp(Box::new(BinaryOp::new(
-                OpKind::Add,
-                Expr::ConstInt::new(2),
-                Expr::ConstInt::new(3),
-            ))),
-        );
-
-        let expect = 5 + (2 + 3);
-        assert_eq!(binary_op.eval(), expect);
-    }
-
-    #[test]
-    fn constint_test() {
-        let expect = 55;
-        let const_int = ConstInt::new(expect);
-        assert_eq!(const_int.eval(), expect);
+        println!("  push rax");
     }
 }
