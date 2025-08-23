@@ -1,6 +1,7 @@
 /// 式を表す。
 pub enum Expr {
     ConstInt(ConstInt),
+    PlusOp(Box<PlusOp>),
 }
 
 // タプルで定義されている。
@@ -27,4 +28,16 @@ fn constint_test() {
 }
 
 /// 加法を表す。
-pub struct PlusOp {}
+pub struct PlusOp {
+    left_expr: Expr,
+    right_expr: Expr,
+}
+
+impl PlusOp {
+    pub fn new(left_expr: Expr, right_expr: Expr) -> PlusOp {
+        PlusOp {
+            left_expr,
+            right_expr,
+        }
+    }
+}
