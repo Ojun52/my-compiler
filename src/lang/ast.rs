@@ -1,7 +1,7 @@
 /// 式を表す。
 pub enum Expr {
     ConstInt(ConstInt),
-    PlusOp(Box<BinaryOp>),
+    BinaryOp(Box<BinaryOp>),
 }
 
 impl Expr {
