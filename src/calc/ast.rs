@@ -30,13 +30,6 @@ impl CosntInt {
     }
 }
 
-#[test]
-fn constint_test() {
-    let expect = 55;
-    let const_int = ConstInt::new(expect);
-    assert_eq!(const_int.eval(), expect);
-}
-
 /// 加法を表す。
 pub struct PlusOp {
     left_expr: Expr,
@@ -57,17 +50,27 @@ impl PlusOp {
     }
 }
 
-#[test]
-fn plus_op_test() {
-    /// 1+(2+3)
-    let plus_op = PlusOp::new(
-        Expr::ConstInt(1),
-        Expr::PlusOp::new(Box::new(PlusOp::new(
-            Expr::ConstInt::new(2),
-            Expr::ConstInt::new(3),
-        ))),
-    );
+#[cfg[test]]
+mod tests {
+    #[test]
+    fn plus_op_test() {
+        /// 1+(2+3)
+        let plus_op = PlusOp::new(
+            Expr::ConstInt(1),
+            Expr::PlusOp::new(Box::new(PlusOp::new(
+                Expr::ConstInt::new(2),
+                Expr::ConstInt::new(3),
+            ))),
+        );
 
-    let expect = 1 + (2 + 3);
-    assert_eq!(plus_op.eval(), expect);
+        let expect = 1 + (2 + 3);
+        assert_eq!(plus_op.eval(), expect);
+    }
+
+    #[test]
+    fn constint_test() {
+        let expect = 55;
+        let const_int = ConstInt::new(expect);
+        assert_eq!(const_int.eval(), expect);
+    }
 }
