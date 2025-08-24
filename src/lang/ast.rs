@@ -1,5 +1,5 @@
 /// 式を表す。
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     ConstInt(ConstInt),
     BinaryOp(Box<BinaryOp>),
@@ -17,7 +17,7 @@ impl Expr {
 
 // タプルで定義されている。
 /// 32bit整数定数
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ConstInt(i32);
 
 impl ConstInt {
@@ -32,7 +32,7 @@ impl ConstInt {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum OpKind {
     Add,
     Sub,
@@ -41,7 +41,7 @@ pub enum OpKind {
 }
 
 /// 基本的な2項演算。
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct BinaryOp {
     op_kind: OpKind,
     left_expr: Expr,
