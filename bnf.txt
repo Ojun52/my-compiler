@@ -1,0 +1,4 @@
+expr    = mul ("+" mul | "-" mul)*
+mul     = primary ("*" primary | "/" primary)*
+primary = num | paren_expr
+paren_expr = "(" expr ")"
