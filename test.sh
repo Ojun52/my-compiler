@@ -21,5 +21,11 @@ assert 42 42
 assert 10 "3+32-25"
 assert 8 "(1+2)*3-1"
 assert 1 "-(1+2)*3+10"
+assert 1 "1<=2"
+assert 1 "1<=1"
+assert 0 "1<1"
+assert 1 "1>=1"
+assert 1 "(3+5)*3>=(2+2)*(2+3)"
+assert 0 "3+(4+3)*1==3*(2+5+6/2)"
 
 echo OK

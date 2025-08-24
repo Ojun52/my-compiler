@@ -38,6 +38,12 @@ pub enum OpKind {
     Sub,
     Mul,
     Div,
+    Equal,
+    NotEqual,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual,
 }
 
 /// 基本的な2項演算。
@@ -72,6 +78,36 @@ impl BinaryOp {
             OpKind::Div => {
                 println!("  cqo");
                 println!("  idiv rdi")
+            }
+            OpKind::Equal => {
+                println!("  cmp rax, rdi");
+                println!("  sete al");
+                println!("  movzb rax, al");
+            }
+            OpKind::NotEqual => {
+                println!("  cmp rax, rdi");
+                println!("  setne al");
+                println!("  movzb rax, al");
+            }
+            OpKind::Less => {
+                println!("  cmp rax, rdi");
+                println!("  setl al");
+                println!("  movzb rax, al");
+            }
+            OpKind::LessEqual => {
+                println!("  cmp rax, rdi");
+                println!("  setle al");
+                println!("  movzb rax, al");
+            }
+            OpKind::Greater => {
+                println!("  cmp rax, rdi");
+                println!("  setg al");
+                println!("  movzb rax, al");
+            }
+            OpKind::GreaterEqual => {
+                println!("  cmp rax, rdi");
+                println!("  setge al");
+                println!("  movzb rax, al");
             }
         }
 

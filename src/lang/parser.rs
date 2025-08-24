@@ -19,6 +19,65 @@ fn const_int_parser_test() {
 }
 
 pub fn expr_parser(s: &str) -> IResult<&str, ast::Expr> {
+    equality_parser(s)
+}
+
+pub fn equality_parser(s: &str) -> IResult<&str, ast::Expr> {
+    let op_kind_parser = combinator::map(branch::alt((tag("=="), tag("!="))), |op| match op {
+        "==" => ast::OpKind::Equal,
+        "!=" => ast::OpKind::NotEqual,
+        _ => panic!("Expected == or !=."),
+    });
+
+    let op_relational_parser = (op_kind_parser, relational_parser);
+    let (rest, first_relational) = relational_parser(s)?;
+
+    let (rest, op_relational_vec) = multi::many0(op_relational_parser).parse(rest)?;
+    Ok((
+        rest,
+        op_relational_vec
+            .iter()
+            .fold(first_relational, |acc, (op_kind, primary)| {
+                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                    op_kind.clone(),
+                    acc,
+                    primary.clone(),
+                )))
+            }),
+    ))
+}
+
+pub fn relational_parser(s: &str) -> IResult<&str, ast::Expr> {
+    let op_kind_parser = combinator::map(
+        branch::alt((tag("<="), tag(">="), tag(">"), tag("<"))),
+        |op| match op {
+            "<" => ast::OpKind::Less,
+            "<=" => ast::OpKind::LessEqual,
+            ">" => ast::OpKind::Greater,
+            ">=" => ast::OpKind::GreaterEqual,
+            _ => panic!("Expected <, <=, >, or >=."),
+        },
+    );
+
+    let op_add_parser = (op_kind_parser, add_parser);
+    let (rest, first_add) = add_parser(s)?;
+
+    let (rest, op_add_vec) = multi::many0(op_add_parser).parse(rest)?;
+    Ok((
+        rest,
+        op_add_vec
+            .iter()
+            .fold(first_add, |acc, (op_kind, primary)| {
+                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                    op_kind.clone(),
+                    acc,
+                    primary.clone(),
+                )))
+            }),
+    ))
+}
+
+pub fn add_parser(s: &str) -> IResult<&str, ast::Expr> {
     let op_kind_parser = combinator::map(branch::alt((tag("+"), tag("-"))), |op| match op {
         "+" => ast::OpKind::Add,
         "-" => ast::OpKind::Sub,
