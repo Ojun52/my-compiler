@@ -68,7 +68,7 @@ impl BinaryOp {
         match self.op_kind {
             OpKind::Add => println!("  add rax, rdi"),
             OpKind::Sub => println!("  sub rax, rdi"),
-            OpKind::Mul => println!("  mul rax, rdi"),
+            OpKind::Mul => println!("  imul rax, rdi"),
             OpKind::Div => {
                 println!("  cqo");
                 println!("  idiv rdi")

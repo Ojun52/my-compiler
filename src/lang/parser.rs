@@ -19,7 +19,29 @@ fn const_int_parser_test() {
 }
 
 pub fn expr_parser(s: &str) -> IResult<&str, ast::Expr> {
-    const_int_parser(s).map(|(rest, integer)| (rest, ast::Expr::ConstInt(integer)))
+    let op_kind_parser = combinator::map(branch::alt((tag("+"), tag("-"))), |op| match op {
+        "+" => ast::OpKind::Add,
+        "-" => ast::OpKind::Sub,
+        _ => panic!("Expected + or -."),
+    });
+
+    let op_mul_parser = (op_kind_parser, mul_parser);
+    let (rest, first_mul) = mul_parser(s)?;
+
+    let (rest, op_primary_vec) = multi::many0(op_mul_parser).parse(rest)?;
+
+    Ok((
+        rest,
+        op_primary_vec
+            .iter()
+            .fold(first_mul, |acc, (op_kind, primary)| {
+                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                    op_kind.clone(),
+                    acc,
+                    primary.clone(),
+                )))
+            }),
+    ))
 }
 
 pub fn paren_expr_parser(s: &str) -> IResult<&str, ast::Expr> {

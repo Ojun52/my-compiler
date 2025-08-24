@@ -8,7 +8,7 @@ fn main() {
     let arg = matches.get_one::<String>("code");
 
     if let Some(code) = arg {
-        let (_, expr) = parser::const_int_parser(&code[..]).unwrap();
+        let (_, expr) = parser::expr_parser(&code[..]).unwrap();
         println!(".intel_syntax noprefix");
         println!(".globl main");
         println!("main:");
