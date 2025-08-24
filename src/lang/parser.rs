@@ -28,11 +28,11 @@ pub fn expr_parser(s: &str) -> IResult<&str, ast::Expr> {
     let op_mul_parser = (op_kind_parser, mul_parser);
     let (rest, first_mul) = mul_parser(s)?;
 
-    let (rest, op_primary_vec) = multi::many0(op_mul_parser).parse(rest)?;
+    let (rest, op_mul_vec) = multi::many0(op_mul_parser).parse(rest)?;
 
     Ok((
         rest,
-        op_primary_vec
+        op_mul_vec
             .iter()
             .fold(first_mul, |acc, (op_kind, primary)| {
                 ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
