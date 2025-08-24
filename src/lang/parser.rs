@@ -84,16 +84,16 @@ pub fn mul_parser(s: &str) -> IResult<&str, ast::Expr> {
         _ => panic!("Expected * or /."),
     });
 
-    let op_primary_parser = (op_kind_parser, primary_parser);
-    let (rest, first_primary) = primary_parser(s)?;
+    let op_unary_parser = (op_kind_parser, unary_parser);
+    let (rest, first_unary) = unary_parser(s)?;
 
-    let (rest, op_primary_vec) = multi::many0(op_primary_parser).parse(rest)?;
+    let (rest, op_unary_vec) = multi::many0(op_unary_parser).parse(rest)?;
 
     Ok((
         rest,
-        op_primary_vec
+        op_unary_vec
             .iter()
-            .fold(first_primary, |acc, (op_kind, primary)| {
+            .fold(first_unary, |acc, (op_kind, primary)| {
                 ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
                     op_kind.clone(),
                     acc,
@@ -119,5 +119,33 @@ pub fn mul_parser_test() {
         ast::Expr::ConstInt(ast::ConstInt::new(2)),
     )));
 
+    assert_eq!(actual, expect);
+}
+
+pub fn unary_parser(s: &str) -> IResult<&str, ast::Expr> {
+    let (rest, minus) = combinator::opt(tag("-")).parse(s)?;
+    let (rest, primary) = primary_parser(rest)?;
+
+    match minus {
+        None => Ok((rest, primary)),
+        Some(_) => Ok((
+            rest,
+            ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                ast::OpKind::Sub,
+                ast::Expr::ConstInt(ast::ConstInt::new(0)),
+                primary,
+            ))),
+        )),
+    }
+}
+
+#[test]
+pub fn unary_parser_test() {
+    let (_, actual) = unary_parser("-96").unwrap();
+    let expect = ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+        ast::OpKind::Sub,
+        ast::Expr::ConstInt(ast::ConstInt::new(0)),
+        ast::Expr::ConstInt(ast::ConstInt::new(96)),
+    )));
     assert_eq!(actual, expect);
 }
