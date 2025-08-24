@@ -1,6 +1,6 @@
 use super::ast;
 use nom::character::complete;
-use nom::{IResult, sequence};
+use nom::{IResult, branch, combinator, sequence};
 use nom::{Parser, character};
 
 pub fn const_int_parser(s: &str) -> IResult<&str, ast::ConstInt> {
@@ -28,5 +28,27 @@ pub fn paren_expr_parser(s: &str) -> IResult<&str, ast::Expr> {
 fn paren_expr_parser_test() {
     let (_, actual) = paren_expr_parser("(123)").unwrap();
     let expect = ast::Expr::ConstInt(ast::ConstInt::new(123));
+    assert_eq!(actual, expect);
+}
+
+pub fn primary_parser(s: &str) -> IResult<&str, ast::Expr> {
+    branch::alt((
+        combinator::map(const_int_parser, |const_int| ast::Expr::ConstInt(const_int)),
+        paren_expr_parser,
+    ))
+    .parse(s)
+}
+
+#[test]
+fn primary_parser_test1() {
+    let (_, actual) = primary_parser("12").unwrap();
+    let expect = ast::Expr::ConstInt(ast::ConstInt::new(12));
+    assert_eq!(actual, expect);
+}
+
+#[test]
+fn primary_parser_test2() {
+    let (_, actual) = primary_parser("(345)").unwrap();
+    let expect = ast::Expr::ConstInt(ast::ConstInt::new(345));
     assert_eq!(actual, expect);
 }
