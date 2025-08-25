@@ -1,16 +1,16 @@
 /// 式を表す。
 #[derive(Debug, PartialEq, Clone)]
-pub enum Expr {
+pub enum Node {
     ConstInt(ConstInt),
     BinaryOp(Box<BinaryOp>),
 }
 
-impl Expr {
+impl Node {
     /// 式に対応するアセンブリを生成する。
     pub fn generate(&self) {
         match self {
-            Expr::ConstInt(e) => e.generate(),
-            Expr::BinaryOp(e) => e.generate(),
+            Node::ConstInt(e) => e.generate(),
+            Node::BinaryOp(e) => e.generate(),
         }
     }
 }
@@ -50,12 +50,12 @@ pub enum OpKind {
 #[derive(Debug, PartialEq, Clone)]
 pub struct BinaryOp {
     op_kind: OpKind,
-    left_expr: Expr,
-    right_expr: Expr,
+    left_expr: Node,
+    right_expr: Node,
 }
 
 impl BinaryOp {
-    pub fn new(op_kind: OpKind, left_expr: Expr, right_expr: Expr) -> BinaryOp {
+    pub fn new(op_kind: OpKind, left_expr: Node, right_expr: Node) -> BinaryOp {
         BinaryOp {
             op_kind,
             left_expr,

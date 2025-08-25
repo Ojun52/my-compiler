@@ -20,11 +20,11 @@ fn const_int_parser_test() {
     assert_eq!(actual, expect);
 }
 
-pub fn expr_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn expr_parser(s: &str) -> IResult<&str, ast::Node> {
     equality_parser(s)
 }
 
-pub fn equality_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn equality_parser(s: &str) -> IResult<&str, ast::Node> {
     let op_kind_parser = combinator::map(branch::alt((tag("=="), tag("!="))), |op| match op {
         "==" => ast::OpKind::Equal,
         "!=" => ast::OpKind::NotEqual,
@@ -40,7 +40,7 @@ pub fn equality_parser(s: &str) -> IResult<&str, ast::Expr> {
         op_relational_vec
             .iter()
             .fold(first_relational, |acc, (op_kind, primary)| {
-                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
                     op_kind.clone(),
                     acc,
                     primary.clone(),
@@ -49,7 +49,7 @@ pub fn equality_parser(s: &str) -> IResult<&str, ast::Expr> {
     ))
 }
 
-pub fn relational_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn relational_parser(s: &str) -> IResult<&str, ast::Node> {
     let op_kind_parser = combinator::map(
         branch::alt((tag("<="), tag(">="), tag(">"), tag("<"))),
         |op| match op {
@@ -70,7 +70,7 @@ pub fn relational_parser(s: &str) -> IResult<&str, ast::Expr> {
         op_add_vec
             .iter()
             .fold(first_add, |acc, (op_kind, primary)| {
-                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
                     op_kind.clone(),
                     acc,
                     primary.clone(),
@@ -79,7 +79,7 @@ pub fn relational_parser(s: &str) -> IResult<&str, ast::Expr> {
     ))
 }
 
-pub fn add_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn add_parser(s: &str) -> IResult<&str, ast::Node> {
     let op_kind_parser = combinator::map(branch::alt((tag("+"), tag("-"))), |op| match op {
         "+" => ast::OpKind::Add,
         "-" => ast::OpKind::Sub,
@@ -96,7 +96,7 @@ pub fn add_parser(s: &str) -> IResult<&str, ast::Expr> {
         op_mul_vec
             .iter()
             .fold(first_mul, |acc, (op_kind, primary)| {
-                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
                     op_kind.clone(),
                     acc,
                     primary.clone(),
@@ -105,21 +105,21 @@ pub fn add_parser(s: &str) -> IResult<&str, ast::Expr> {
     ))
 }
 
-pub fn paren_expr_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn paren_expr_parser(s: &str) -> IResult<&str, ast::Node> {
     sequence::delimited(tag("("), expr_parser, tag(")")).parse(s)
 }
 
 #[test]
 fn paren_expr_parser_test() {
     let (_, actual) = paren_expr_parser("(123)").unwrap();
-    let expect = ast::Expr::ConstInt(ast::ConstInt::new(123));
+    let expect = ast::Node::ConstInt(ast::ConstInt::new(123));
     assert_eq!(actual, expect);
 }
 
-pub fn primary_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn primary_parser(s: &str) -> IResult<&str, ast::Node> {
     let (rest, _) = space0.parse(s)?;
     let (rest, result) = branch::alt((
-        combinator::map(const_int_parser, |const_int| ast::Expr::ConstInt(const_int)),
+        combinator::map(const_int_parser, |const_int| ast::Node::ConstInt(const_int)),
         paren_expr_parser,
     ))
     .parse(rest)?;
@@ -130,18 +130,18 @@ pub fn primary_parser(s: &str) -> IResult<&str, ast::Expr> {
 #[test]
 fn primary_parser_test1() {
     let (_, actual) = primary_parser("12").unwrap();
-    let expect = ast::Expr::ConstInt(ast::ConstInt::new(12));
+    let expect = ast::Node::ConstInt(ast::ConstInt::new(12));
     assert_eq!(actual, expect);
 }
 
 #[test]
 fn primary_parser_test2() {
     let (_, actual) = primary_parser("(345)").unwrap();
-    let expect = ast::Expr::ConstInt(ast::ConstInt::new(345));
+    let expect = ast::Node::ConstInt(ast::ConstInt::new(345));
     assert_eq!(actual, expect);
 }
 
-pub fn mul_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn mul_parser(s: &str) -> IResult<&str, ast::Node> {
     let op_kind_parser = combinator::map(branch::alt((tag("*"), tag("/"))), |op| match op {
         "*" => ast::OpKind::Mul,
         "/" => ast::OpKind::Div,
@@ -158,7 +158,7 @@ pub fn mul_parser(s: &str) -> IResult<&str, ast::Expr> {
         op_unary_vec
             .iter()
             .fold(first_unary, |acc, (op_kind, primary)| {
-                ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+                ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
                     op_kind.clone(),
                     acc,
                     primary.clone(),
@@ -171,22 +171,22 @@ pub fn mul_parser(s: &str) -> IResult<&str, ast::Expr> {
 pub fn mul_parser_test() {
     let (_, actual) = mul_parser("4*5/2").unwrap();
 
-    let four_times_five = ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+    let four_times_five = ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
         ast::OpKind::Mul,
-        ast::Expr::ConstInt(ast::ConstInt::new(4)),
-        ast::Expr::ConstInt(ast::ConstInt::new(5)),
+        ast::Node::ConstInt(ast::ConstInt::new(4)),
+        ast::Node::ConstInt(ast::ConstInt::new(5)),
     )));
 
-    let expect = ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+    let expect = ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
         ast::OpKind::Div,
         four_times_five,
-        ast::Expr::ConstInt(ast::ConstInt::new(2)),
+        ast::Node::ConstInt(ast::ConstInt::new(2)),
     )));
 
     assert_eq!(actual, expect);
 }
 
-pub fn unary_parser(s: &str) -> IResult<&str, ast::Expr> {
+pub fn unary_parser(s: &str) -> IResult<&str, ast::Node> {
     let (rest, _) = space0.parse(s)?;
     let (rest, minus) = combinator::opt(tag("-")).parse(rest)?;
     let (rest, primary) = primary_parser(rest)?;
@@ -195,9 +195,9 @@ pub fn unary_parser(s: &str) -> IResult<&str, ast::Expr> {
         None => Ok((rest, primary)),
         Some(_) => Ok((
             rest,
-            ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+            ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
                 ast::OpKind::Sub,
-                ast::Expr::ConstInt(ast::ConstInt::new(0)),
+                ast::Node::ConstInt(ast::ConstInt::new(0)),
                 primary,
             ))),
         )),
@@ -207,10 +207,10 @@ pub fn unary_parser(s: &str) -> IResult<&str, ast::Expr> {
 #[test]
 pub fn unary_parser_test() {
     let (_, actual) = unary_parser("-96").unwrap();
-    let expect = ast::Expr::BinaryOp(Box::new(ast::BinaryOp::new(
+    let expect = ast::Node::BinaryOp(Box::new(ast::BinaryOp::new(
         ast::OpKind::Sub,
-        ast::Expr::ConstInt(ast::ConstInt::new(0)),
-        ast::Expr::ConstInt(ast::ConstInt::new(96)),
+        ast::Node::ConstInt(ast::ConstInt::new(0)),
+        ast::Node::ConstInt(ast::ConstInt::new(96)),
     )));
     assert_eq!(actual, expect);
 }
