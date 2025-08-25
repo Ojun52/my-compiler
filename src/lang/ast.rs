@@ -50,23 +50,23 @@ pub enum OpKind {
 #[derive(Debug, PartialEq, Clone)]
 pub struct BinaryOp {
     op_kind: OpKind,
-    left_expr: Node,
-    right_expr: Node,
+    left_node: Node,
+    right_node: Node,
 }
 
 impl BinaryOp {
-    pub fn new(op_kind: OpKind, left_expr: Node, right_expr: Node) -> BinaryOp {
+    pub fn new(op_kind: OpKind, left_node: Node, right_node: Node) -> BinaryOp {
         BinaryOp {
             op_kind,
-            left_expr,
-            right_expr,
+            left_node,
+            right_node,
         }
     }
 
     /// 2項演算の評価。
     pub fn generate(&self) {
-        self.left_expr.generate();
-        self.right_expr.generate();
+        self.left_node.generate();
+        self.right_node.generate();
 
         println!("  pop rdi");
         println!("  pop rax");
