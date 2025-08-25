@@ -1,13 +1,15 @@
 use super::ast;
 use nom::Parser;
 use nom::bytes::complete::tag;
-use nom::character::complete::digit1;
+use nom::character::complete::{digit1, space0};
 use nom::multi;
 use nom::{IResult, branch, combinator, sequence};
 
 pub fn const_int_parser(s: &str) -> IResult<&str, ast::ConstInt> {
-    let (rest, integer) = digit1(s)?;
+    let (rest, _) = space0(s)?;
+    let (rest, integer) = digit1(rest)?;
     let value: i32 = integer.parse().unwrap();
+    let (rest, _) = space0(rest)?;
     Ok((rest, ast::ConstInt::new(value)))
 }
 
@@ -115,11 +117,14 @@ fn paren_expr_parser_test() {
 }
 
 pub fn primary_parser(s: &str) -> IResult<&str, ast::Expr> {
-    branch::alt((
+    let (rest, _) = space0.parse(s)?;
+    let (rest, result) = branch::alt((
         combinator::map(const_int_parser, |const_int| ast::Expr::ConstInt(const_int)),
         paren_expr_parser,
     ))
-    .parse(s)
+    .parse(rest)?;
+    let (rest, _) = space0.parse(rest)?;
+    Ok((rest, result))
 }
 
 #[test]
@@ -182,7 +187,8 @@ pub fn mul_parser_test() {
 }
 
 pub fn unary_parser(s: &str) -> IResult<&str, ast::Expr> {
-    let (rest, minus) = combinator::opt(tag("-")).parse(s)?;
+    let (rest, _) = space0.parse(s)?;
+    let (rest, minus) = combinator::opt(tag("-")).parse(rest)?;
     let (rest, primary) = primary_parser(rest)?;
 
     match minus {
