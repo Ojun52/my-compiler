@@ -3,6 +3,8 @@
 pub enum Node {
     ConstInt(ConstInt),
     BinaryOp(Box<BinaryOp>),
+    Assign(Box<Assign>),
+    LocalVar(Box<LocalVar>),
 }
 
 impl Node {
@@ -11,6 +13,8 @@ impl Node {
         match self {
             Node::ConstInt(e) => e.generate(),
             Node::BinaryOp(e) => e.generate(),
+            Node::Assign(e) => e.generate(),
+            Node::LocalVar(e) => e.generate(),
         }
     }
 }
@@ -111,6 +115,59 @@ impl BinaryOp {
             }
         }
 
+        println!("  push rax");
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Assign {
+    lhs: Node,
+    rhs: Option<Node>,
+}
+
+impl Assign {
+    pub fn new(lhs: Node, rhs: Option<Node>) -> Assign {
+        Assign { lhs, rhs }
+    }
+
+    pub fn generate(&self) {
+        match &self.rhs {
+            Some(rhs) => match &self.lhs {
+                Node::LocalVar(lhs) => {
+                    lhs.generate_address();
+                    rhs.generate();
+                    println!("  pop rdi");
+                    println!("  pop rax");
+                    println!("  mov [rax], rdi");
+                    println!("  push rdi");
+                }
+                _ => panic!("Lhs is not a variable."),
+            },
+            None => self.lhs.generate(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct LocalVar {
+    offset: i32,
+}
+
+impl LocalVar {
+    pub fn new(offset: i32) -> LocalVar {
+        LocalVar { offset }
+    }
+
+    pub fn generate_address(&self) {
+        println!("  mov rax, rsp");
+        println!("  sub rax, {}", self.offset);
+        println!("  push rax");
+    }
+
+    pub fn generate(&self) {
+        println!("  mov rax, rsp");
+        println!("  sub rax, {}", self.offset);
+        println!("  mov rax, [rax]");
         println!("  push rax");
     }
 }

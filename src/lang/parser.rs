@@ -1,7 +1,7 @@
 use super::ast;
 use nom::Parser;
 use nom::bytes::complete::tag;
-use nom::character::complete::{digit1, space0};
+use nom::character::complete::{digit1, one_of, space0};
 use nom::multi;
 use nom::{IResult, branch, combinator, sequence};
 
@@ -21,7 +21,7 @@ fn const_int_parser_test() {
 }
 
 pub fn expr_parser(s: &str) -> IResult<&str, ast::Node> {
-    equality_parser(s)
+    assign_parser(s)
 }
 
 pub fn equality_parser(s: &str) -> IResult<&str, ast::Node> {
@@ -112,7 +112,10 @@ pub fn paren_expr_parser(s: &str) -> IResult<&str, ast::Node> {
 #[test]
 fn paren_expr_parser_test() {
     let (_, actual) = paren_expr_parser("(123)").unwrap();
-    let expect = ast::Node::ConstInt(ast::ConstInt::new(123));
+    let expect = ast::Node::Assign(Box::new(ast::Assign::new(
+        ast::Node::ConstInt(ast::ConstInt::new(123)),
+        None,
+    )));
     assert_eq!(actual, expect);
 }
 
@@ -121,10 +124,30 @@ pub fn primary_parser(s: &str) -> IResult<&str, ast::Node> {
     let (rest, result) = branch::alt((
         combinator::map(const_int_parser, |const_int| ast::Node::ConstInt(const_int)),
         paren_expr_parser,
+        ident_parser,
     ))
     .parse(rest)?;
     let (rest, _) = space0.parse(rest)?;
     Ok((rest, result))
+}
+
+pub fn ident_parser(s: &str) -> IResult<&str, ast::Node> {
+    let (rest, name) = one_of("abcdefghijklmnopqrstuvwxyz").parse(s)?;
+    let name_code = name as i32;
+    let a_code = 'a' as i32;
+    let index = name_code - a_code + 1;
+
+    Ok((
+        rest,
+        ast::Node::LocalVar(Box::new(ast::LocalVar::new(index * 8))),
+    ))
+}
+
+#[test]
+fn ident_parser_test() {
+    let (_, actual) = ident_parser("a").unwrap();
+    let expect = ast::Node::LocalVar(Box::new(ast::LocalVar::new(8)));
+    assert_eq!(actual, expect);
 }
 
 #[test]
@@ -137,7 +160,10 @@ fn primary_parser_test1() {
 #[test]
 fn primary_parser_test2() {
     let (_, actual) = primary_parser("(345)").unwrap();
-    let expect = ast::Node::ConstInt(ast::ConstInt::new(345));
+    let expect = ast::Node::Assign(Box::new(ast::Assign::new(
+        ast::Node::ConstInt(ast::ConstInt::new(345)),
+        None,
+    )));
     assert_eq!(actual, expect);
 }
 
@@ -213,4 +239,31 @@ pub fn unary_parser_test() {
         ast::Node::ConstInt(ast::ConstInt::new(96)),
     )));
     assert_eq!(actual, expect);
+}
+
+pub fn assign_parser(s: &str) -> IResult<&str, ast::Node> {
+    let (rest, lhs) = equality_parser(s)?;
+    let (rest, op_eq_rhs) = combinator::opt((tag("="), assign_parser)).parse(rest)?;
+
+    match op_eq_rhs {
+        Some(eq_rhs) => Ok((
+            rest,
+            ast::Node::Assign(Box::new(ast::Assign::new(lhs, Some(eq_rhs.1)))),
+        )),
+        None => Ok((
+            rest,
+            ast::Node::Assign(Box::new(ast::Assign::new(lhs, None))),
+        )),
+    }
+}
+
+pub fn stmt_parser(s: &str) -> IResult<&str, ast::Node> {
+    let (rest, _) = space0(s)?;
+    let (rest, expr) = expr_parser(rest)?;
+    let (rest, _) = tag(";").parse(rest)?;
+    Ok((rest, expr))
+}
+
+pub fn program_parser(s: &str) -> IResult<&str, Vec<ast::Node>> {
+    multi::many0(stmt_parser).parse(s)
 }
